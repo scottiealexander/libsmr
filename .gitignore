@@ -1,0 +1,7 @@
+*.exe
+*.o
+*.obj
+*.exp
+_dev/*
+lib/darwin/libsmr.dylib.dSYM
+*.smr
