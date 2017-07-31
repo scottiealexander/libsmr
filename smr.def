@@ -1,0 +1,26 @@
+LIBRARY   smr
+EXPORTS
+    read_file_header
+    free_file_header
+    read_channel_header
+    free_channel_header
+    read_block_header_array
+    read_block_header
+    free_block_header_array
+    read_channel_info_array
+    load_channel_info
+    free_channel_info_array
+    free_channel_info
+    read_wavemark_channel
+    free_wavemark_channel
+    read_continuous_channel
+    read_continuous_channel_from_header
+    free_continuous_channel
+    read_event_channel
+    free_event_channel
+    read_marker_channel
+    free_marker_channel
+    channel_label_to_index
+    channel_label_path_to_index
+    get_sample_interval
+    read_channel_array
