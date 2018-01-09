@@ -22,7 +22,7 @@ macro libname(dir, prefix)
 
     # path to lib is now relative to the containing file
     current_dir = splitdir(@__FILE__)[1]
-    ofile = joinpath(current_dir, "libsmr", os , str)
+    ofile = joinpath(current_dir, "..", "lib", os, str)
     return ofile
 end
 # =========================================================================== #

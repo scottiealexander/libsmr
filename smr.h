@@ -1,8 +1,8 @@
-#include <stdint.h>
-#include <stdio.h>
-
 #ifndef _SMR_H
 #define _SMR_H
+
+#include <stdint.h>
+#include <stdio.h>
 
 /* =============================================================================
 TODO:
