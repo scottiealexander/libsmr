@@ -62,41 +62,49 @@ char *swap_ext(const char *filepath, const char *ext)
 void dump_channel_info(const char* smrfile)
 {
     struct SMRChannelInfoArray *ifo_array = read_channel_array(smrfile);
-    for (int32_t k = 0; k < ifo_array->length; ++k)
+    if (ifo_array != NULL)
     {
-        printf("%s", ifo_array->ifo[k]->title);
-        for (uint8_t j = 0; j < 9 - strlen(ifo_array->ifo[k]->title); ++j)
+        for (int32_t k = 0; k < ifo_array->length; ++k)
         {
-            printf(" ");
+            printf("%s", ifo_array->ifo[k]->title);
+            for (uint8_t j = 0; j < 9 - strlen(ifo_array->ifo[k]->title); ++j)
+            {
+                printf(" ");
+            }
+            printf("| index: %d,  kind: %d, port: %d\n",
+                ifo_array->ifo[k]->index,
+                ifo_array->ifo[k]->kind,
+                ifo_array->ifo[k]->phy_chan
+            );
         }
-        printf("| index: %d,  kind: %d, port: %d\n",
-            ifo_array->ifo[k]->index,
-            ifo_array->ifo[k]->kind,
-            ifo_array->ifo[k]->phy_chan
-        );
+        free_channel_info_array(ifo_array);
     }
 }
 /* -------------------------------------------------------------------------- */
 IntArray *get_continuous_indicies(const char *smrfile)
 {
     struct SMRChannelInfoArray *ifo_array = read_channel_array(smrfile);
+    IntArray *out = NULL;
 
-    IntArray *out = malloc(sizeof(IntArray));
-    out->data = malloc(ifo_array->length * sizeof(int));
-
-    int32_t ncont = 0;
-    for (int32_t k = 0; k < ifo_array->length; ++k)
+    if (ifo_array != NULL)
     {
-        if (ifo_array->ifo[k]->kind == CONTINUOUS_CHANNEL)
+        out = malloc(sizeof(IntArray));
+        out->data = malloc(ifo_array->length * sizeof(int));
+
+        int32_t ncont = 0;
+        for (int32_t k = 0; k < ifo_array->length; ++k)
         {
-            out->data[ncont] = ifo_array->ifo[k]->index;
-            ++ncont;
+            if (ifo_array->ifo[k]->kind == CONTINUOUS_CHANNEL)
+            {
+                out->data[ncont] = ifo_array->ifo[k]->index;
+                ++ncont;
+            }
         }
+
+        free_channel_info_array(ifo_array);
+
+        out->length = ncont;
     }
-
-    free_channel_info_array(ifo_array);
-
-    out->length = ncont;
 
     return out;
 }
@@ -172,6 +180,15 @@ int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
 {
     int exit_code = 0;
 
+    if (channels->length < 1)
+    {
+        printf(
+            "[INFO]: no channels given, aborting... "
+            "(mda file would be empty)\n"
+        );
+        return exit_code;
+    }
+
     FILE *mda_fp = open_file(mdafile, FILE_WRITE_MODE);
 
     if (mda_fp != NULL)
@@ -180,7 +197,9 @@ int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
         double sampling_rate;
         for (int32_t k = 0; k < channels->length; ++k)
         {
-            struct SMRContChannel *cont = read_continuous_channel(smrfile, channels->data[k]);
+            struct SMRContChannel *cont = read_continuous_channel(smrfile,
+                channels->data[k]);
+
             if (cont != NULL)
             {
                 if (k == 0)
@@ -221,7 +240,9 @@ int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
             if (param_fp != NULL)
             {
                 char buf[64];
-                sprintf(buf, "{\"samplerate\": %d}", (int32_t)round(sampling_rate));
+                sprintf(buf, "{\"samplerate\": %d}",
+                    (int32_t)round(sampling_rate));
+
                 fwrite(buf, sizeof(char), strlen(buf), param_fp);
                 fclose(param_fp);
             }
@@ -236,7 +257,7 @@ int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
     else
     {
         show_error("Failed to open file for writing!");
-        printf("FILE: %s\n", mdafile);
+        printf("    Invalid file: %s\n", mdafile);
         exit_code = -2;
     }
 
@@ -246,24 +267,38 @@ int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
 void usage()
 {
     printf(
-        "Usage:\n"
-        "\tsmr2mda [options] <smrfile> <mdafile>\n"
-        "\t\toptions:\n"
-        ""
+        "\nUsage:\n"
+        "smr2mda [options] <smrfile> <mdafile>\n"
+        "\n"
+        "Options:\n"
+        "    l       - print channel info for <smrfile> (output optional)\n"
+        "    c [idx] - only include channels from <smrfile> with indicies\n"
+        "              [idx] in output. [idx] should be a comma seperated\n"
+        "              list of integer channel indicies (e.g. \"1,2\")\n"
+        "    h       - print documentation\n"
+        "\n"
+        "Inputs:\n"
+        "    <smrfile> - full path to a Spike2 SMR file\n"
+        "    <mdafile> - full path to write the resulting mda file to\n"
+        "\n"
+        "Examples:\n"
+        "    #for printing channel info, output path is not needed\n"
+        "    smr2mda -l ./b1_con_006.smr\n"
+        "\n"
+        "    #convert all continuous channels\n"
+        "    smr2mda ./b1_con_006.smr ./test.mda\n"
+        "\n"
+        "    #only convert channels 12 and 13 (NOTE: these are the channel INDICIES)\n"
+        "    smr2mda -c \"12,13\" ./b1_con_006.smr ./test2.mda\n"
+        "\n"
     );
 }
 /* -------------------------------------------------------------------------- */
 int main(int argc, char const *argv[]) {
 
-    /*
-        smr2mda -l A_area_198.smr
-        smr2mda A_area_198.smr test.mda
-        smr2mda -c "1,2,3" A_area_198.smr test.mda
-    */
-
     int exit_code = 0;
 
-    if (argc < 3)
+    if (argc < 2)
     {
         show_error("Not enough input arguments!");
         return 127;
@@ -273,7 +308,10 @@ int main(int argc, char const *argv[]) {
     {
         switch (argv[1][1]) {
             case 'l':
-                dump_channel_info(argv[2]);
+                if (argc > 2)
+                {
+                    dump_channel_info(argv[2]);
+                }
                 break;
             case 'c':
                 if (argc < 5)
@@ -284,20 +322,34 @@ int main(int argc, char const *argv[]) {
                 else
                 {
                     IntArray *channels = get_indicies_from_list(argv[2]);
-                    exit_code = write_mda(argv[3], argv[4], channels);
+                    if (channels != NULL)
+                    {
+                        exit_code = write_mda(argv[3], argv[4], channels);
+                    }
+                    free_int_array(channels);
                 }
                 break;
-
+            case 'h':
+                usage();
+                break;
             default:
                 show_error("Unrecognized flag!");
         }
     }
-    else
+    else if (argc > 2)
     {
         IntArray *channels = get_continuous_indicies(argv[1]);
-        exit_code = write_mda(argv[1], argv[2], channels);
+        if (channels != NULL)
+        {
+            exit_code = write_mda(argv[1], argv[2], channels);
+        }
+        free_int_array(channels);
     }
-
+    else
+    {
+        show_error("Not enough input arguments for call syntax!");
+        return 127;
+    }
 
     return exit_code;
 }
