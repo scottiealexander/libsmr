@@ -39,10 +39,10 @@ all: shared static
 smr2mda: static
 	$(CC) -o ./bin/smr2mda$(EXE_EXT) $(CFLAGS) smr2mda.c $(PREFIX).o -lm
 
-shared:
+shared: smr.c smr.h smr_utilities.h
 	$(CC) -o $(PREFIX)$(SO_EXT) $(CFLAGS) -shared $(OPT_FLAGS) smr.c
 
-static:
+static: smr.c smr.h smr_utilities.h
 	$(CC) -o $(PREFIX).o $(CFLAGS) -c smr.c
 	ar rcs $(PREFIX)$(A_EXT) $(PREFIX).o
 
