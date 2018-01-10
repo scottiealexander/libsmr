@@ -1,10 +1,11 @@
 
 OS_NAME=$(shell uname)
-
+EXE_EXT=
 ifeq ($(OS), Windows_NT)
   CC=clang
   SO_EXT=.dll
   A_EXT=.lib
+  EXE_EXT=.exe
   OPT_FLAGS=-m32
   SUB_DIR=windows
 endif
@@ -35,6 +36,9 @@ PREFIX=./lib/$(SUB_DIR)/libsmr
 
 all: shared static
 
+smr2mda: static
+	$(CC) -o ./bin/smr2mda$(EXE_EXT) $(CFLAGS) smr2mda.c $(PREFIX).o -lm
+
 shared:
 	$(CC) -o $(PREFIX)$(SO_EXT) $(CFLAGS) -shared $(OPT_FLAGS) smr.c
 
@@ -43,4 +47,4 @@ static:
 	ar rcs $(PREFIX)$(A_EXT) $(PREFIX).o
 
 clean:
-	$(RM) $(PREFIX)$(SO_EXT) $(PREFIX)$(A_EXT) $(PREFIX).o
+	$(RM) $(PREFIX)$(SO_EXT) $(PREFIX)$(A_EXT) $(PREFIX).o smr2mda.*

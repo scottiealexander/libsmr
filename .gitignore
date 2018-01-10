@@ -5,3 +5,4 @@
 _dev/*
 lib/darwin/libsmr.dylib.dSYM
 *.smr
+bin/*

@@ -1,11 +1,11 @@
+#ifndef _SMR_UTILITIES_H
+#define _SMR_UTILITIES_H
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
-
-#ifndef _SMR_UTILITIES_H
-#define _SMR_UTILITIES_H
 
 /* NOTE
     mode to open smr file for reading, on windows this *MUST* be "rb" as just
