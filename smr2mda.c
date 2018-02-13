@@ -176,20 +176,120 @@ void write_mda_header(FILE *fp, int32_t nchan, int32_t npt)
     fwrite(&npt, sizeof(npt), 1, fp);
 }
 /* -------------------------------------------------------------------------- */
-void write_wavemark(FILE* fp, SMRWMrkChannel* chan)
+int get_channel_type(const char* smrfile, int idx)
 {
-    int16_t z = 0;
-    for (size_t k = 0; k < chan->length; ++k)
+    struct SMRChannelInfoArray* ifo = read_channel_array(smrfile);
+
+    int type = -1;
+
+    if (ifo != NULL)
     {
-        fwrite(cont->wavemark, sizeof(int16_t), chan->npt, fp);
-        for (size_t j = 0; j < chan->npt; ++j)
+        for (size_t k = 0; k < ifo->length; ++k)
         {
-            fwrite(&z, sizeof(int16_t), 1, fp);
+            if (ifo->ifo[k]->index == idx)
+            {
+                type = (int)ifo->ifo[k]->kind;
+                break;
+            }
         }
+        free_channel_info_array(ifo);
     }
+    return type;
 }
 /* -------------------------------------------------------------------------- */
-int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
+double get_sampling_rate(const char* smrfile, int idx)
+{
+    double fs = 0.0;
+
+    struct SMRFileHeader* fhdr = read_file_header(smrfile);
+
+    if (fhdr != NULL)
+    {
+        fs = MICROSECONDS / get_sample_interval(fhdr, idx);
+        free_file_header(fhdr);
+    }
+    else
+    {
+        printf("[WARN]: Failed to find sampling rate for channel %d", idx);
+    }
+    return fs;
+}
+/* -------------------------------------------------------------------------- */
+int write_wavemark(FILE* fp, const char* smrfile, int idx,
+    int write_header, size_t nchan, uint32_t* npt, double* fs)
+{
+    int success = 0;
+    struct SMRWMrkChannel* wmrk = read_wavemark_channel(smrfile, idx);
+
+    if (wmrk != NULL)
+    {
+        // we double the number of wavemarks due to the npt zero padding between
+        // each wavemark
+
+        if (write_header)
+        {
+            *npt = (wmrk->length * 2 * wmrk->npt);
+            write_mda_header(fp, nchan, *npt);
+        }
+
+        if ((*npt) ==  (wmrk->length * 2 * wmrk->npt))
+        {
+            const int16_t z = 0;
+
+            for (size_t k = 0; k < wmrk->length; ++k)
+            {
+                fwrite(wmrk->wavemarks + (wmrk->npt * k), sizeof(int16_t), wmrk->npt, fp);
+                for (size_t j = 0; j < wmrk->npt; ++j)
+                {
+                    fwrite(&z, sizeof(int16_t), 1, fp);
+                }
+            }
+            success = 1;
+        }
+        else
+        {
+            show_error("Not all channels have the same # of samples!");
+        }
+
+        *fs = get_sampling_rate(smrfile, idx);
+        free_wavemark_channel(wmrk);
+    }
+
+    return success;
+}
+/* -------------------------------------------------------------------------- */
+int write_continuous(FILE* fp, const char* smrfile, int idx,
+    int write_header, size_t nchan, uint32_t* npt, double* fs)
+{
+    int success = 0;
+    struct SMRContChannel* cont = read_continuous_channel(smrfile, idx);
+
+    if (cont != NULL)
+    {
+        if (write_header)
+        {
+            *npt = cont->length;
+            write_mda_header(fp, nchan, *npt);
+        }
+
+        if ((*npt) == cont->length)
+        {
+            fwrite(cont->data, sizeof(int16_t), cont->length, fp);
+            success = 1;
+        }
+        else
+        {
+            show_error("Not all channels have the same # of samples!");
+        }
+
+        *fs = cont->sampling_rate;
+        free_continuous_channel(cont);
+    }
+
+    return success;
+}
+/* -------------------------------------------------------------------------- */
+int write_mda(const char* smrfile, const char* mdafile, IntArray* channels)
 {
     int exit_code = 0;
 
@@ -206,36 +306,48 @@ int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
 
     if (mda_fp != NULL)
     {
-        uint32_t npt;
+        uint32_t npt = 0;
         double sampling_rate;
+        int success;
         for (int32_t k = 0; k < channels->length; ++k)
         {
-            struct SMRContChannel *cont = read_continuous_channel(smrfile,
-                channels->data[k]);
+            int write_header = k == 0 ? 1 : 0;
 
-            if (cont != NULL)
+            int type = get_channel_type(smrfile, channels->data[k]);
+
+            switch (type)
             {
-                if (k == 0)
-                {
-                    sampling_rate = cont->sampling_rate;
-                    npt = (uint32_t)cont->length;
-                    write_mda_header(mda_fp, channels->length, npt);
-                }
-                else if ((uint32_t)cont->length != npt)
-                {
-                    show_error("Not all channels have the same # of samples!");
-                    free_continuous_channel(cont);
+                case CONTINUOUS_CHANNEL:
+                    success = write_continuous(mda_fp, smrfile, channels->data[k],
+                        write_header, channels->length, &npt, &sampling_rate);
+                    break;
+
+                case ADC_MARKER_CHANNEL:
+                    if (channels->length > 1)
+                    {
+                        show_error("Multiple wavemark channels cannot by saved to a single MDA file");
+                        exit_code = -5;
+                    }
+                    else
+                    {
+                        success = write_wavemark(mda_fp, smrfile,
+                            channels->data[k], write_header, channels->length,
+                            &npt, &sampling_rate);
+                    }
+                    break;
+
+                default:
+                    show_error("Only continuous and wavemark channels are supported");
+                    printf("    Channel Type: %d\n", type);
                     exit_code = -4;
                     break;
-                }
-
-                fwrite(cont->data, sizeof(int16_t), cont->length, mda_fp);
-                free_continuous_channel(cont);
             }
-            else
+
+            if (!success)
             {
+                show_error("Failed to write channel to MDA file");
+                printf("    Channel Index: %d\n", channels->data[k]);
                 exit_code = -3;
-                break;
             }
         }
 
