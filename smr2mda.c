@@ -176,6 +176,19 @@ void write_mda_header(FILE *fp, int32_t nchan, int32_t npt)
     fwrite(&npt, sizeof(npt), 1, fp);
 }
 /* -------------------------------------------------------------------------- */
+void write_wavemark(FILE* fp, SMRWMrkChannel* chan)
+{
+    int16_t z = 0;
+    for (size_t k = 0; k < chan->length; ++k)
+    {
+        fwrite(cont->wavemark, sizeof(int16_t), chan->npt, fp);
+        for (size_t j = 0; j < chan->npt; ++j)
+        {
+            fwrite(&z, sizeof(int16_t), 1, fp);
+        }
+    }
+}
+/* -------------------------------------------------------------------------- */
 int write_mda(const char *smrfile, const char *mdafile, IntArray *channels)
 {
     int exit_code = 0;
