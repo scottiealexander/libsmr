@@ -125,7 +125,7 @@ struct SMRFileHeader *read_file_header(const char *ifile)
 
     hdr->filepath = copy_string(ifile);
 
-    fread(&hdr->system_id, sizeof (int16_t), 1, fp);
+    fread(&hdr->system_id, sizeof (hdr->system_id), 1, fp);
 
     read_chars(fp, "%10c", hdr->copyright, sizeof (hdr->copyright));
     hdr->copyright[10] = '\0';
@@ -133,24 +133,24 @@ struct SMRFileHeader *read_file_header(const char *ifile)
     read_chars(fp, "%8c", hdr->creator, sizeof (hdr->creator));
     hdr->creator[8] = '\0';
 
-    fread(&hdr->uspertime, sizeof (int16_t), 1, fp);
-    fread(&hdr->timeperadc, sizeof (int16_t), 1, fp);
-    fread(&hdr->filestate, sizeof (int16_t), 1, fp);
+    fread(&hdr->uspertime, sizeof (hdr->uspertime), 1, fp);
+    fread(&hdr->timeperadc, sizeof (hdr->timeperadc), 1, fp);
+    fread(&hdr->filestate, sizeof (hdr->filestate), 1, fp);
 
-    fread(&hdr->firstdata, sizeof (int32_t), 1, fp);
+    fread(&hdr->firstdata, sizeof (hdr->firstdata), 1, fp);
 
-    fread(&hdr->nchannel, sizeof (int16_t), 1, fp);
-    fread(&hdr->chansize, sizeof (int16_t), 1, fp);
-    fread(&hdr->extra_data, sizeof (int16_t), 1, fp);
-    fread(&hdr->buffersize, sizeof (int16_t), 1, fp);
-    fread(&hdr->osformat, sizeof (int16_t), 1, fp);
+    fread(&hdr->nchannel, sizeof (hdr->nchannel), 1, fp);
+    fread(&hdr->chansize, sizeof (hdr->chansize), 1, fp);
+    fread(&hdr->extra_data, sizeof (hdr->extra_data), 1, fp);
+    fread(&hdr->buffersize, sizeof (hdr->buffersize), 1, fp);
+    fread(&hdr->osformat, sizeof (hdr->osformat), 1, fp);
 
-    fread(&hdr->maxtime, sizeof (int32_t), 1, fp);
+    fread(&hdr->maxtime, sizeof (hdr->maxtime), 1, fp);
 
-    fread(&hdr->dtimebase, sizeof (double), 1, fp);
+    fread(&hdr->dtimebase, sizeof (hdr->dtimebase), 1, fp);
 
     fread(hdr->time_detail, sizeof (uint8_t), 6, fp);
-    fread(&hdr->time_year, sizeof (int16_t), 1, fp);
+    fread(&hdr->time_year, sizeof (hdr->time_year), 1, fp);
 
     fread(hdr->pad, sizeof (char), 52, fp);
     hdr->pad[52] = '\0';
@@ -212,31 +212,31 @@ struct SMRChannelHeader *read_channel_header(struct SMRFileHeader *hdr, int idx)
     /*offset for header and preceeding channels*/
     fseek(fp, 512+(140*(idx-1)), SEEK_SET);
 
-    fread(&chan->del_size, sizeof (int16_t), 1, fp);
+    fread(&chan->del_size, sizeof (chan->del_size), 1, fp);
 
-    fread(&chan->next_del_block, sizeof (int32_t), 1, fp);
-    fread(&chan->first_block, sizeof (int32_t), 1, fp);
-    fread(&chan->last_block, sizeof (int32_t), 1, fp);
+    fread(&chan->next_del_block, sizeof (chan->next_del_block), 1, fp);
+    fread(&chan->first_block, sizeof (chan->first_block), 1, fp);
+    fread(&chan->last_block, sizeof (chan->last_block), 1, fp);
 
-    fread(&chan->nblock, sizeof (int16_t), 1, fp);
-    fread(&chan->nextra, sizeof (int16_t), 1, fp);
-    fread(&chan->pre_trig, sizeof (int16_t), 1, fp);
-    fread(&chan->free_0, sizeof (int16_t), 1, fp);
-    fread(&chan->phy_sz, sizeof (int16_t), 1, fp);
-    fread(&chan->max_data, sizeof (int16_t), 1, fp);
+    fread(&chan->nblock, sizeof (chan->nblock), 1, fp);
+    fread(&chan->nextra, sizeof (chan->nextra), 1, fp);
+    fread(&chan->pre_trig, sizeof (chan->pre_trig), 1, fp);
+    fread(&chan->free_0, sizeof (chan->free_0), 1, fp);
+    fread(&chan->phy_sz, sizeof (chan->phy_sz), 1, fp);
+    fread(&chan->max_data, sizeof (chan->max_data), 1, fp);
 
     chan->comment = fill_string(fp, 71);
 
-    fread(&chan->max_chan_time, sizeof (int32_t), 1, fp);
-    fread(&chan->l_chan_dvd, sizeof (int32_t), 1, fp);
+    fread(&chan->max_chan_time, sizeof (chan->max_chan_time), 1, fp);
+    fread(&chan->l_chan_dvd, sizeof (chan->l_chan_dvd), 1, fp);
 
-    fread(&chan->phy_chan, sizeof (int16_t), 1, fp);
+    fread(&chan->phy_chan, sizeof (chan->phy_chan), 1, fp);
 
     chan->title = fill_string(fp, 9);
 
-    fread(&chan->ideal_rate, sizeof (float), 1, fp);
-    fread(&chan->kind, sizeof (uint8_t), 1, fp);
-    fread(&chan->pad, sizeof (int8_t), 1, fp);
+    fread(&chan->ideal_rate, sizeof (chan->ideal_rate), 1, fp);
+    fread(&chan->kind, sizeof (chan->kind), 1, fp);
+    fread(&chan->pad, sizeof (chan->pad), 1, fp);
 
     chan->units = NULL;
 
@@ -255,18 +255,18 @@ struct SMRChannelHeader *read_channel_header(struct SMRFileHeader *hdr, int idx)
         case CONTINUOUS_CHANNEL:
         case ADC_MARKER_CHANNEL:
 
-            fread(&chan->scale, sizeof (float), 1, fp);
-            fread(&chan->offset, sizeof (float), 1, fp);
+            fread(&chan->scale, sizeof (chan->scale), 1, fp);
+            fread(&chan->offset, sizeof (chan->offset), 1, fp);
 
             chan->units = fill_string(fp, 5);
 
             if (hdr->system_id < 6)
             {
-                fread(&chan->divide, sizeof (int16_t), 1, fp);
+                fread(&chan->divide, sizeof (chan->divide), 1, fp);
             }
             else
             {
-                fread(&chan->interleave, sizeof (int16_t), 1, fp);
+                fread(&chan->interleave, sizeof (chan->interleave), 1, fp);
             }
 
             break;
@@ -274,26 +274,26 @@ struct SMRChannelHeader *read_channel_header(struct SMRFileHeader *hdr, int idx)
         case REAL_MARKER_CHANNEL:
         case REAL_WAVE_CHANNEL:
 
-            fread(&chan->min, sizeof (float), 1, fp);
-            fread(&chan->max, sizeof (float), 1, fp);
+            fread(&chan->min, sizeof (chan->min), 1, fp);
+            fread(&chan->max, sizeof (chan->max), 1, fp);
 
             chan->units = fill_string(fp, 5);
 
             if (hdr->system_id < 6)
             {
-                fread(&chan->divide, sizeof (int16_t), 1, fp);
+                fread(&chan->divide, sizeof (chan->divide), 1, fp);
             }
             else
             {
-                fread(&chan->interleave, sizeof (int16_t), 1, fp);
+                fread(&chan->interleave, sizeof (chan->interleave), 1, fp);
             }
 
             break;
 
         case EVENT_4_CHANNEL:
 
-            fread(&chan->init_low, 1, sizeof (unsigned char), fp);
-            fread(&chan->next_low, 1, sizeof (unsigned char), fp);
+            fread(&chan->init_low, 1, sizeof (chan->init_low), fp);
+            fread(&chan->next_low, 1, sizeof (chan->next_low), fp);
 
             break;
     }
@@ -381,13 +381,13 @@ struct SMRBlockHeader read_block_header(FILE *fp)
 
     hdr.nitem = 0;
 
-    fread(&hdr.next_block, sizeof (int32_t), 1, fp);
-    fread(&hdr.last_block, sizeof (int32_t), 1, fp);
-    fread(&hdr.start_time, sizeof (int32_t), 1, fp);
-    fread(&hdr.end_time, sizeof (int32_t), 1, fp);
+    fread(&hdr.next_block, sizeof (hdr.next_block), 1, fp);
+    fread(&hdr.last_block, sizeof (hdr.last_block), 1, fp);
+    fread(&hdr.start_time, sizeof (hdr.start_time), 1, fp);
+    fread(&hdr.end_time, sizeof (hdr.end_time), 1, fp);
 
-    fread(&hdr.index, sizeof (int16_t), 1, fp);
-    fread(&hdr.nitem, sizeof (int16_t), 1, fp);
+    fread(&hdr.index, sizeof (hdr.index), 1, fp);
+    fread(&hdr.nitem, sizeof (hdr.nitem), 1, fp);
 
     return hdr;
 }
@@ -590,7 +590,7 @@ struct SMRWMrkChannel *read_wavemark_channel(const char *ifile, int idx)
 
         for (j = 0; j < bhdr->hdr[k].nitem; ++j, ++inc)
         {
-            fread(&buf, sizeof (int32_t), 1, fp);
+            fread(&buf, sizeof (buf), 1, fp);
             fread(chan->markers+(inc*MARKER_SIZE), sizeof (uint8_t), MARKER_SIZE, fp);
             fread(chan->wavemarks+(inc*chan->npt), sizeof (int16_t), chan->npt, fp);
 

@@ -78,7 +78,9 @@ struct SMRChannelHeader
     int32_t first_block;
     int32_t last_block;
 
-    int16_t nblock;
+    // testing with really long recordings suggests this is infact unsigned
+    uint16_t nblock;
+
     int16_t nextra;
     int16_t pre_trig;
     int16_t free_0;
