@@ -4,8 +4,8 @@ A simple C library for reading electrophysiology data files in the [Spike2](http
 **NOTE** the newer .SMRX format is not yet supported.
 
 ## Contents
-* `julia/`: julia interface to the library
-* `matlab/`: matlab/mex based interface
+* `julia/`: julia interface to the library, see `julia/src/SMR.jl`
+* `matlab/`: matlab/mex based interface, see `matlab/build.m` and `matlab/smr_test.m`
 * `test/`: old debugging / testing utilities that likely do not work
 * `smr2mda.c`: program for converting channels from a SMR file to the MountainSort MDA format (for documentation see source or compile and call with `smr2mda -h`)
 

@@ -72,10 +72,3 @@ void mexFunction(int nout, mxArray *pout[], int nin, const mxArray *pin[])
     mxFree(ifile);
 }
 /* ========================================================================= */
-
-/*
-%!gcc -o libsmr.o -g -Wall -c -fPIC smr.c
-mex(['-I' pwd], '-output', 'mx_read_channel_info','libsmr.o','mx_read_channel_info.c');
-ifile = '/home/scottie/code/c/libsmr/b1_con_006.smr';
-ifo = mx_read_channel_info(ifile);
-*/

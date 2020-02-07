@@ -241,13 +241,3 @@ void mexFunction(int nout, mxArray *pout[], int nin, const mxArray *pin[])
     mxFree(ifile);
 }
 /* ========================================================================= */
-/*
-%!gcc -o libsmr.o -g -Wall -c -fPIC smr.c
-mex(['-I' pwd], '-output', 'mx_read_channel','libsmr.o','mx_read_channel.c');
-
-!export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:$PWD
-mex(['-I' pwd], ['-L' pwd], '-lsmr', '-output', 'mx_read_channel','mx_read_channel.c');
-
-ifile = '/home/scottie/code/c/libsmr/b1_con_006.smr';
-s = mx_read_channel(ifile, 'WMrk 4');
-*/

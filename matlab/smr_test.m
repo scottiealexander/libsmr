@@ -1,13 +1,13 @@
-function smr_test()
+function smr_test(ifile)
 % smr_test
 %
 % Description: run a test of the libsmr matlab interface by reading channel
-%              info and then every channel based on that info from the test
-%              file "b1_con_006.smr" in the base libsmr directory
+%              info and then every channel based on that info from a test file
 %
-% Syntax: smr_test()
+% Syntax: smr_test(ifile)
 %
 % In:
+%       ifile - the full path to a .smr file
 %
 % Out:
 %
@@ -16,11 +16,8 @@ function smr_test()
 %
 % Please report bugs to: scottiealexander11@gmail.com
 
-libdir = fileparts(fileparts(mfilename('fullpath')));
-ifile = fullfile(libdir, 'b1_con_006.smr');
-
 if exist(ifile, 'file') ~= 2
-    error('Failed to locate smr test file: looking in "%s"', ifile);
+    error('Failed to locate smr test file: looking for "%s"', ifile);
 end
 
 if ispc()
