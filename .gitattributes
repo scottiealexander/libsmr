@@ -2,6 +2,7 @@
 *.mexw64 -crlf -diff -merge
 *.mexmaci64 -crlf -diff -merge
 *.dll -crlf -diff -merge
+*.dylib -crlf -diff -merge
 *.lib -crlf -diff -merge
 *.so -crlf -diff -merge
 *.a -crlf -diff -merge
